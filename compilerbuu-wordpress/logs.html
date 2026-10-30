@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>เหตุการณ์ | CompilerBUU Security</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #F0F2F5;
+      --surface: #FFFFFF;
+      --surface-2: #F5F7FA;
+      --ink: #2F3B55;
+      --ink-2: #52607A;
+      --ink-3: #66728C;
+      --line: #E2E7EF;
+      --line-2: #EDF0F5;
+      --accent: #1F5FBF;
+      --dark: #1F2733;
+      --on-dark: #FFFFFF;
+      --series-1: #43A047;
+      --series-2: #F57C32;
+      --good: #0ca30c;
+      --warning: #fab219;
+      --critical: #d03b3b;
+      --neutral: #8792A8;
+      --wash-ok: #E8F5E9;
+      --wash-warn: #FFF4D9;
+      --wash-crit: #FCE6E6;
+      --shadow: 0 2px 10px rgba(47, 59, 85, .08);
+      --sans: "IBM Plex Sans Thai", "Sukhumvit Set", "Leelawadee UI", "Noto Sans Thai", "Thonburi", system-ui, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.6 var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    h1, h2, h3 { margin: 0; line-height: 1.3; }
+    p { margin: 0; }
+    button, input, select { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .skip { position: absolute; left: 16px; top: -48px; z-index: 10; background: var(--dark); color: var(--on-dark); padding: 8px 14px; border-radius: 8px; }
+    .skip:focus { top: 8px; }
+    .mono { font-family: var(--mono); font-size: 13px; }
+    .num { font-variant-numeric: tabular-nums; }
+    .muted { color: var(--ink-3); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--surface-2); border: 1px solid var(--line-2); padding: 1px 6px; border-radius: 6px; }
+
+    /* Shell: sidebar left, content right */
+    .shell {
+      margin: 0; padding: 16px;
+      display: grid; grid-template-columns: 248px minmax(0, 1fr); gap: 24px;
+    }
+    .side {
+      position: sticky; top: 16px; align-self: start; height: calc(100vh - 32px); min-height: 420px;
+      background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 18px 14px;
+      display: flex; flex-direction: column;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+    .brand strong { display: block; font-size: 15px; line-height: 1.3; }
+    .brand small { display: block; font-size: 12px; color: var(--ink-3); }
+    .nav__label { padding: 6px 12px; font-size: 13px; color: var(--ink-3); }
+    .nav { display: flex; flex-direction: column; gap: 4px; }
+    .nav a {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+      color: var(--ink-2); text-decoration: none; font-weight: 500;
+    }
+    .nav a:hover { background: var(--surface-2); color: var(--ink); }
+    .nav a[aria-current="page"] { background: var(--dark); color: var(--on-dark); box-shadow: 0 4px 10px rgba(31, 39, 51, .25); }
+    .nav svg { flex: none; }
+    .side__foot { margin-top: auto; padding: 12px; border-radius: 12px; background: var(--surface-2); font-size: 13px; color: var(--ink-2); }
+
+    .content { min-width: 0; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .crumb { font-size: 14px; color: var(--ink-3); }
+    .crumb strong { color: var(--ink); font-weight: 500; }
+    .sync { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--ink-2); }
+    .btn {
+      border: 1px solid var(--line); background: var(--surface); border-radius: 10px;
+      padding: 7px 14px; cursor: pointer; font-size: 14px; line-height: 1.4; box-shadow: var(--shadow);
+    }
+    .btn:hover { background: var(--surface-2); }
+    .btn:disabled { opacity: .6; cursor: progress; }
+
+    .notice { background: var(--wash-warn); border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .notice[hidden] { display: none; }
+    .notice p { padding: 10px 16px; font-size: 14px; }
+
+    .page__head { margin-bottom: 18px; }
+    .page__head h1 { font-size: 26px; font-weight: 700; }
+    .page__head p { color: var(--ink-2); margin-top: 2px; max-width: 72ch; }
+    .loading { color: var(--ink-3); padding: 48px 0; }
+
+    .section { margin-top: 24px; }
+    .section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+    .section__head h2 { font-size: 17px; font-weight: 600; }
+    .section__head p { color: var(--ink-3); font-size: 13px; }
+    .panel { background: var(--surface); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+    .split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+    .split > .section { min-width: 0; }
+
+    /* Status badge: icon + label, never colour alone */
+    .badge { display: inline-flex; align-items: center; gap: 8px; }
+    .badge__icon {
+      flex: none; width: 18px; height: 18px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font: 700 12px/1 var(--sans); color: #fff; background: var(--neutral);
+    }
+    .badge--ok .badge__icon { background: var(--good); }
+    .badge--warn .badge__icon { background: var(--warning); color: #2A1E00; }
+    .badge--crit .badge__icon { background: var(--critical); }
+
+    /* Verdict banner */
+    .verdict { border-radius: 14px; padding: 20px 24px; background: var(--wash-ok); box-shadow: var(--shadow); }
+    .verdict--warn { background: var(--wash-warn); }
+    .verdict--crit { background: var(--wash-crit); }
+    .verdict__top { display: flex; gap: 16px; align-items: center; }
+    .verdict__mark {
+      flex: none; width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font: 700 22px/1 var(--sans); color: #fff; background: var(--good); box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
+    }
+    .verdict--warn .verdict__mark { background: var(--warning); color: #2A1E00; }
+    .verdict--crit .verdict__mark { background: var(--critical); }
+    .verdict h2 { font-size: clamp(20px, 3vw, 26px); font-weight: 700; }
+    .verdict__sub { color: var(--ink-2); font-size: 14px; }
+    .issues { list-style: none; margin: 16px 0 0 60px; padding: 0; border-top: 1px solid rgba(47, 59, 85, .12); }
+    .issues li { display: flex; align-items: center; gap: 16px; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(47, 59, 85, .12); }
+    .issues li:last-child { border-bottom: 0; padding-bottom: 0; }
+    .issues a { white-space: nowrap; font-weight: 500; }
+
+    /* KPI cards */
+    .kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+    .kpi { position: relative; background: var(--surface); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+    .kpi__label { font-size: 13px; color: var(--ink-2); padding-right: 52px; }
+    .kpi__value { font-size: 28px; font-weight: 700; line-height: 1.3; font-variant-numeric: tabular-nums; }
+    .kpi__value a { color: inherit; text-decoration: none; }
+    .kpi__value a:hover { text-decoration: underline; }
+    .kpi__hint { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+    .kpi__hint--bad { color: #B42323; font-weight: 500; }
+    .kpi__hint--good { color: #2E7D32; font-weight: 500; }
+    .kpi__icon {
+      position: absolute; top: 16px; right: 16px; width: 46px; height: 46px; border-radius: 12px;
+      background: var(--dark); color: var(--on-dark); display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 14px rgba(31, 39, 51, .3);
+    }
+
+    /* Bars */
+    .bars { list-style: none; margin: 0; padding: 0; }
+    .bars li + li { margin-top: 14px; }
+    .bars__row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+    .bars__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bars__row .num { flex: none; color: var(--ink-2); font-size: 14px; }
+    .bar { height: 8px; border-radius: 999px; background: var(--line-2); overflow: hidden; }
+    .bar__fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--series-1); }
+    .fill--2 { background: var(--series-1); }
+    .fill--3 { background: var(--neutral); }
+    .fill--4 { background: var(--series-2); }
+    .fill--5 { background: var(--critical); }
+    .ai__text { max-width: 75ch; }
+    .ai__full { max-width: 75ch; margin-top: 14px; white-space: pre-wrap; line-height: 1.8; }
+    .note { margin-top: 14px; font-size: 14px; color: var(--ink-2); }
+
+    /* Tables */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { text-align: left; font-size: 13px; font-weight: 500; color: var(--ink-3); padding: 0 12px 8px; border-bottom: 1px solid var(--line); }
+    .table td { padding: 10px 12px; border-bottom: 1px solid var(--line-2); vertical-align: top; font-variant-numeric: tabular-nums; }
+    .table th:first-child, .table td:first-child { padding-left: 0; }
+    .table tr:last-child td { border-bottom: 0; }
+    .nowrap { white-space: nowrap; }
+
+    /* Filters */
+    .filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 18px; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink-2); }
+    .field--grow { flex: 1 1 240px; }
+    .field select, .field input {
+      border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 10px; font-size: 14px; min-height: 38px; box-shadow: var(--shadow);
+    }
+    .seg { display: inline-flex; flex-wrap: wrap; border-radius: 12px; background: var(--surface); padding: 3px; gap: 2px; box-shadow: var(--shadow); }
+    .seg button { border: 0; background: transparent; border-radius: 9px; padding: 6px 12px; cursor: pointer; font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+    .seg button:hover { background: var(--surface-2); }
+    .seg button[aria-pressed="true"] { background: var(--dark); color: var(--on-dark); }
+    .seg__n { font-size: 12px; opacity: .7; font-variant-numeric: tabular-nums; }
+    .resultbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 14px; color: var(--ink-2); }
+    .linkbtn { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .logtable { background: var(--surface); border-radius: 14px; padding: 8px 18px; box-shadow: var(--shadow); }
+    .logtable th { padding-top: 10px; }
+    .logtable tbody tr { cursor: pointer; }
+    .logtable tbody tr:hover td { background: var(--surface-2); }
+    .evtable td.msg { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty { padding: 48px 24px; text-align: center; color: var(--ink-2); background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); }
+    .empty h2 { font-size: 18px; color: var(--ink); margin-bottom: 6px; }
+    .empty .btn { margin-top: 14px; }
+    .empty--error { background: var(--wash-crit); text-align: left; }
+
+    dialog.sheet {
+      width: min(720px, calc(100% - 32px)); border: 0; border-radius: 16px; padding: 0;
+      background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px rgba(5, 12, 28, .35);
+    }
+    dialog.sheet::backdrop { background: rgba(10, 18, 34, .5); }
+    .sheet__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 24px 0; }
+    .sheet__head h2 { font-size: 18px; font-weight: 600; }
+    .sheet__body { padding: 16px 24px 24px; }
+    .sheet pre {
+      margin: 16px 0 0; padding: 14px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px;
+      font: 13px/1.6 var(--mono); white-space: pre-wrap; word-break: break-all;
+    }
+    .sheet__actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px; margin: 0; }
+    .facts dt { color: var(--ink-2); font-size: 14px; }
+    .facts dd { margin: 0; }
+
+    @media (max-width: 960px) {
+      .shell { grid-template-columns: minmax(0, 1fr); padding: 12px; gap: 14px; }
+      .side { position: static; height: auto; min-height: 0; flex-direction: row; align-items: center; gap: 8px; padding: 8px 10px; overflow-x: auto; }
+      .brand { border: 0; margin: 0; padding: 0 8px 0 0; flex: none; }
+      .brand small, .nav__label, .side__foot { display: none; }
+      .nav { flex-direction: row; }
+      .nav a { white-space: nowrap; padding: 9px 12px; }
+      .split { grid-template-columns: minmax(0, 1fr); }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      body { font-size: 14px; }
+      .shell { padding: 8px; }
+      .sync__text, .brand { display: none; }
+      .nav a { padding: 8px 10px; gap: 6px; }
+      .verdict { padding: 16px; }
+      .verdict__mark { width: 38px; height: 38px; font-size: 18px; }
+      .issues { margin-left: 0; }
+      .issues li { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+      .kpi { padding: 14px; }
+      .kpi__label { padding-right: 0; }
+      .kpi__value { font-size: 22px; }
+      .kpi__icon { display: none; }
+      .logtable { padding: 4px 14px; }
+      .logtable thead { display: none; }
+      .logtable .table, .logtable tbody { display: block; }
+      .logtable tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
+      .logtable tr:last-child { border-bottom: 0; }
+      .logtable td { padding: 0; border: 0; min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+      .logtable td:nth-child(1) { grid-column: 1 / -1; color: var(--ink-3); }
+      .evtable td.msg { grid-column: 1 / -1; max-width: none; }
+      .facts { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .facts dd { margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+  <div class="shell">
+    <aside class="side">
+      <a class="brand" href="security-dashboard.html">
+        <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1 2 5v8c0 7.2 4.6 13.3 11 16 6.4-2.7 11-8.8 11-16V5L13 1Z" fill="#FFCD58"/><path d="m8.5 15 3.2 3.2 6-6.4" fill="none" stroke="#002B6A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span><strong>CompilerBUU</strong><small>ความปลอดภัยของเซิร์ฟเวอร์</small></span>
+      </a>
+      <p class="nav__label">หน้า</p>
+      <nav class="nav" aria-label="หน้า">
+          <a href="security-dashboard.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>ภาพรวม</a>
+          <a href="logs.html" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>เหตุการณ์</a>
+          <a href="ai.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 10h4v4h-4z"/></svg>AI วิเคราะห์</a>
+      </nav>
+      <p class="side__foot">compilerbuu.duckdns.org<br>ข้อมูลจาก access log ของ Nginx</p>
+    </aside>
+    <div class="content">
+      <div class="topline">
+        <p class="crumb">หน้า / <strong>เหตุการณ์</strong></p>
+        <div class="sync">
+          <span class="sync__text" data-updated></span>
+          <button class="btn" type="button" data-refresh>รีเฟรช</button>
+        </div>
+      </div>
+      <div class="notice" data-notice hidden></div>
+      <main id="main">
+        <div class="page__head">
+      <h1>เหตุการณ์ต้องสงสัย</h1>
+      <p>รายการที่ระบบตรวจพบจาก access log คลิกแถวเพื่อดูรายละเอียด</p>
+    </div>
+    <form class="filters" role="search" data-filters>
+      <div class="field">
+        <span id="sev-label">ความเสี่ยง</span>
+        <div class="seg" role="group" aria-labelledby="sev-label" data-severity>
+          <button type="button" data-value="">ทั้งหมด <span class="seg__n"></span></button>
+          <button type="button" data-value="high">สูง <span class="seg__n"></span></button>
+          <button type="button" data-value="medium">ปานกลาง <span class="seg__n"></span></button>
+          <button type="button" data-value="low">ต่ำ <span class="seg__n"></span></button>
+        </div>
+      </div>
+      <label class="field">ประเภท
+        <select data-type><option value="">ทุกประเภท</option></select>
+      </label>
+      <label class="field field--grow">ค้นหา
+        <input type="search" data-q placeholder="IP, path หรือประเภท" autocomplete="off" spellcheck="false">
+      </label>
+    </form>
+    <div data-view><p class="loading">กำลังโหลดเหตุการณ์…</p></div>
+      </main>
+    </div>
+  </div>
+  <dialog class="sheet" data-detail aria-labelledby="detail-title">
+    <div class="sheet__head">
+      <h2 id="detail-title" data-detail-title></h2>
+      <button class="btn" type="button" data-close>ปิด</button>
+    </div>
+    <div class="sheet__body">
+      <dl class="facts" data-detail-facts></dl>
+      <pre data-detail-raw></pre>
+      <div class="sheet__actions">
+        <button class="btn" type="button" data-copy>คัดลอก path</button>
+        <button class="btn" type="button" data-by-ip>ดูเหตุการณ์ทั้งหมดของ IP นี้</button>
+      </div>
+    </div>
+  </dialog>
+  <script>
+    'use strict';
+
+    /* ---------- Shared helpers (same block in every page) ---------- */
+
+    const TZ = 'Asia/Bangkok';
+    const REFRESH_MS = 60000;
+    const STALE_MIN = 15;
+    const API_URL = '/api/security_data.json';
+
+    const nf = new Intl.NumberFormat('th-TH');
+    const cf = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+    const dtf = (opts) => new Intl.DateTimeFormat('th-TH', { timeZone: TZ, hour12: false, ...opts });
+    const F = {
+      hm: dtf({ hour: '2-digit', minute: '2-digit' }),
+      hms: dtf({ hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      day: dtf({ day: 'numeric', month: 'short' }),
+      dayLong: dtf({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+      date: dtf({ day: 'numeric', month: 'short', year: 'numeric' }),
+    };
+
+    const fmt = {
+      num: (n) => nf.format(n),
+      compact: (n) => (n >= 10000 ? cf.format(n) : nf.format(n)),
+      hm: (d) => `${F.hm.format(new Date(d))} น.`,
+      hms: (d) => F.hms.format(new Date(d)),
+      day: (d) => F.day.format(new Date(d)),
+      dayLong: (d) => F.dayLong.format(new Date(d)),
+      date: (d) => F.date.format(new Date(d)),
+      stamp: (d) => `${F.day.format(new Date(d))} ${F.hm.format(new Date(d))} น.`,
+    };
+
+    /* Build DOM with textContent only. Log lines come from attackers, so never use innerHTML. */
+    function el(tag, props, ...children) {
+      const node = document.createElement(tag);
+      for (const [k, v] of Object.entries(props || {})) {
+        if (v == null || v === false) continue;
+        if (k === 'class') node.className = v;
+        else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+        else node.setAttribute(k, v === true ? '' : v);
+      }
+      for (const c of children.flat(Infinity)) {
+        if (c == null || c === false) continue;
+        node.append(c instanceof Node ? c : String(c));
+      }
+      return node;
+    }
+
+    function svg(tag, attrs, ...children) {
+      const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [k, v] of Object.entries(attrs || {})) if (v != null) node.setAttribute(k, v);
+      for (const c of children.flat()) if (c != null) node.append(c instanceof Node ? c : String(c));
+      return node;
+    }
+
+    const LEVEL = {
+      ok: { label: 'ปกติ', icon: '✓' },
+      info: { label: 'ต่ำ', icon: 'i' },
+      warn: { label: 'ปานกลาง', icon: '!' },
+      crit: { label: 'สูง', icon: '×' },
+    };
+    const RANK = { ok: 0, info: 1, warn: 2, crit: 3 };
+
+    /* Severity text from the backend (High, Medium, ...) to a level. Unknown text counts as medium. */
+    function sevLevel(s) {
+      const v = String(s || '').toLowerCase();
+      if (v === 'critical' || v === 'high') return 'crit';
+      if (v === 'low') return 'info';
+      return 'warn';
+    }
+
+    function badge(level, text) {
+      const meta = LEVEL[level] || LEVEL.info;
+      return el('span', { class: `badge badge--${level}` },
+        el('span', { class: 'badge__icon', 'aria-hidden': 'true' }, meta.icon),
+        text == null ? meta.label : [el('span', { class: 'sr-only' }, `${meta.label}: `), text]);
+    }
+
+    function section(title, opts, ...body) {
+      const id = `h-${Math.random().toString(36).slice(2, 8)}`;
+      return el('section', { class: `section ${opts.class || ''}`, id: opts.id, 'aria-labelledby': id },
+        el('div', { class: 'section__head' },
+          el('h2', { id }, title),
+          opts.link ? el('a', { href: opts.link }, opts.linkText) : opts.aside ? el('p', {}, opts.aside) : null),
+        body);
+    }
+
+    const logsHref = (params) => `logs.html#${new URLSearchParams(params)}`;
+
+    /* Horizontal bars. rows = [[label, count, cssClass?]]; the widest bar is the largest count. */
+    function bars(rows, { mono = false, share = false } = {}) {
+      const max = Math.max(1, ...rows.map((r) => r[1]));
+      const sum = rows.reduce((t, r) => t + r[1], 0) || 1;
+      return el('ul', { class: 'bars' }, rows.map(([label, n, cls, href]) => {
+        const fill = el('span', { class: `bar__fill ${cls || ''}` });
+        fill.style.width = `${(n / max) * 100}%`;
+        const name = el(href ? 'a' : 'span', { class: `bars__label ${mono ? 'mono' : ''}`, title: label, href }, label);
+        return el('li', {},
+          el('div', { class: 'bars__row' }, name,
+            el('span', { class: 'num' }, fmt.num(n), share ? ` (${Math.round((n / sum) * 100)}%)` : '')),
+          el('div', { class: 'bar', 'aria-hidden': 'true' }, fill));
+      }));
+    }
+
+    /* Normalise the backend file. Every field may be missing. */
+    function normalise(raw) {
+      const k = raw.kpis || {};
+      const ch = raw.charts || {};
+      return {
+        kpis: {
+          total: k.totalRequests, ips: k.uniqueIPs, suspicious: k.suspiciousEvents ?? 0,
+          e4: k.errors4xx ?? 0, e5: k.errors5xx ?? 0, high: k.highRisk ?? 0,
+        },
+        status: ch.statusCodes || {},
+        paths: ch.topPaths || {},
+        ai: raw.aiAnalysis || null,
+        events: Array.isArray(raw.events) ? raw.events : [],
+        sys: raw.systemInfo || {},
+        generatedAt: raw.generatedAt || raw.generated_at || null,
+      };
+    }
+
+    async function loadData() {
+      const res = await fetch(API_URL, { cache: 'no-store' });
+      if (res.status === 401) throw new Error('ยังไม่ได้ล็อกอิน (HTTP 401) ให้รีเฟรชหน้าแล้วกรอกรหัสผ่านใหม่');
+      if (!res.ok) throw new Error(`ไฟล์ ${API_URL} ตอบกลับ HTTP ${res.status}`);
+      let raw;
+      try {
+        raw = await res.json();
+      } catch {
+        throw new Error(`ไฟล์ ${API_URL} ไม่ใช่ JSON ที่ถูกต้อง`);
+      }
+      const data = normalise(raw);
+      data.modified = res.headers.get('Last-Modified');
+      return data;
+    }
+
+    /* Loads the data, renders the page, keeps the header in sync and refreshes every minute. */
+    function startPage(render) {
+      const view = document.querySelector('[data-view]');
+      const updated = document.querySelector('[data-updated]');
+      const button = document.querySelector('[data-refresh]');
+      const notice = document.querySelector('[data-notice]');
+      let busy = false;
+
+      async function run() {
+        if (busy) return;
+        busy = true;
+        button.disabled = true;
+        try {
+          const data = await loadData();
+          render(data, view);
+          const stamp = data.generatedAt || data.modified;
+          if (stamp) {
+            const age = (Date.now() - new Date(stamp)) / 60000;
+            updated.textContent = `ข้อมูลเมื่อ ${fmt.stamp(stamp)}`;
+            notice.hidden = !(age > STALE_MIN);
+            notice.replaceChildren(el('p', {}, `ข้อมูลไม่ได้อัปเดตตั้งแต่ ${fmt.stamp(stamp)} ตรวจว่าสคริปต์ Python บนเซิร์ฟเวอร์ยังทำงานอยู่`));
+          } else {
+            updated.textContent = `โหลดเมื่อ ${fmt.stamp(Date.now())}`;
+          }
+        } catch (err) {
+          showError(err);
+        } finally {
+          busy = false;
+          button.disabled = false;
+        }
+      }
+
+      function showError(err) {
+        const local = location.protocol === 'file:';
+        view.replaceChildren(el('div', { class: 'empty empty--error', role: 'alert' },
+          el('h2', {}, 'โหลดข้อมูลไม่ได้'),
+          el('p', {}, local
+            ? 'เปิดไฟล์จากเครื่องตรงๆ แล้วเบราว์เซอร์จะไม่ให้อ่านข้อมูล ให้เปิดผ่าน web server เช่นรัน python3 -m http.server ในโฟลเดอร์นี้'
+            : `${err.message} ตรวจว่าสคริปต์ Python ยังทำงานอยู่และเขียนไฟล์ไว้ถูกที่`)));
+      }
+
+      button.addEventListener('click', run);
+      setInterval(() => {
+        if (!document.hidden && !document.querySelector('dialog[open]')) run();
+      }, REFRESH_MS);
+      run();
+    }
+
+    /* ---------- Events page ---------- */
+
+    const DEFAULTS = { severity: '', type: '', q: '' };
+    const SEV_GROUPS = { high: ['critical', 'high'], medium: ['medium'], low: ['low'] };
+    const ui = {
+      severity: document.querySelector('[data-severity]'),
+      type: document.querySelector('[data-type]'),
+      q: document.querySelector('[data-q]'),
+      dialog: document.querySelector('[data-detail]'),
+    };
+    let events = null;
+    let view = null;
+
+    function readState() {
+      const p = new URLSearchParams(location.hash.slice(1));
+      const s = {};
+      for (const [k, v] of Object.entries(DEFAULTS)) s[k] = p.get(k) ?? v;
+      return s;
+    }
+
+    function writeState(next) {
+      const p = new URLSearchParams();
+      for (const [k, v] of Object.entries(next)) if (v && v !== DEFAULTS[k]) p.set(k, v);
+      const hash = p.toString();
+      history.replaceState(null, '', hash ? `#${hash}` : location.pathname + location.search);
+      syncControls();
+      update();
+    }
+    const setState = (patch) => writeState({ ...readState(), ...patch });
+
+    function syncControls() {
+      const s = readState();
+      ui.type.value = s.type;
+      if (document.activeElement !== ui.q) ui.q.value = s.q;
+      for (const b of ui.severity.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.value === s.severity));
+    }
+
+    function fillTypes() {
+      const types = [...new Set(events.map((e) => e.detectionType).filter(Boolean))].sort();
+      ui.type.replaceChildren(el('option', { value: '' }, 'ทุกประเภท'), types.map((t) => el('option', { value: t }, t)));
+      ui.type.value = readState().type;
+    }
+
+    function matches(e, s, ignoreSeverity) {
+      if (!ignoreSeverity && s.severity && !SEV_GROUPS[s.severity].includes(String(e.severity).toLowerCase())) return false;
+      if (s.type && e.detectionType !== s.type) return false;
+      if (s.q) {
+        const hay = `${e.sourceIp} ${e.path} ${e.detectionType} ${e.method}`.toLowerCase();
+        if (!hay.includes(s.q.toLowerCase())) return false;
+      }
+      return true;
+    }
+
+    function update() {
+      if (!events) return;
+      const s = readState();
+      const counts = { '': 0, high: 0, medium: 0, low: 0 };
+      for (const e of events) {
+        if (!matches(e, s, true)) continue;
+        counts[''] += 1;
+        const sev = String(e.severity).toLowerCase();
+        for (const g of Object.keys(SEV_GROUPS)) if (SEV_GROUPS[g].includes(sev)) counts[g] += 1;
+      }
+      for (const b of ui.severity.querySelectorAll('button')) b.querySelector('.seg__n').textContent = fmt.num(counts[b.dataset.value] || 0);
+
+      const found = events.filter((e) => matches(e, s, false));
+      const filtered = Object.entries(s).some(([k, v]) => v !== DEFAULTS[k]);
+      const reset = () => writeState({ ...DEFAULTS });
+
+      if (!found.length) {
+        view.replaceChildren(el('div', { class: 'empty' },
+          el('h2', {}, events.length ? 'ไม่พบเหตุการณ์ที่ตรงกับตัวกรอง' : 'ไม่พบเหตุการณ์ต้องสงสัย'),
+          el('p', {}, events.length ? 'ลองค้นด้วยคำที่สั้นลง หรือล้างตัวกรอง' : 'ระบบไม่พบความผิดปกติในช่วงเวลานี้'),
+          events.length ? el('button', { class: 'btn', type: 'button', onclick: reset }, 'ล้างตัวกรอง') : null));
+        return;
+      }
+      view.replaceChildren(
+        el('div', { class: 'resultbar' },
+          el('p', { role: 'status' }, `พบ ${fmt.num(found.length)} รายการ`),
+          filtered ? el('button', { class: 'linkbtn', type: 'button', onclick: reset }, 'ล้างตัวกรอง') : null),
+        el('div', { class: 'logtable evtable' },
+          el('table', { class: 'table' },
+            el('thead', {}, el('tr', {}, ['เวลา', 'IP', 'Method', 'Path', 'Status', 'ประเภท', 'ความเสี่ยง'].map((h) => el('th', { scope: 'col' }, h)))),
+            el('tbody', {}, found.map((e) => el('tr', {
+              tabindex: 0,
+              onclick: () => openDetail(e),
+              onkeydown: (ev) => {
+                if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openDetail(e); }
+              },
+            },
+            el('td', { class: 'mono nowrap' }, e.timestamp),
+            el('td', { class: 'mono' }, e.sourceIp),
+            el('td', { class: 'mono' }, e.method),
+            el('td', { class: 'mono msg', title: e.path }, e.path),
+            el('td', { class: 'mono' }, e.statusCode),
+            el('td', {}, e.detectionType),
+            el('td', {}, badge(sevLevel(e.severity), e.severity))))))));
+    }
+
+    function openDetail(e) {
+      const d = ui.dialog;
+      d.querySelector('[data-detail-title]').textContent = e.detectionType || 'เหตุการณ์';
+      d.querySelector('[data-detail-facts]').replaceChildren(
+        el('dt', {}, 'เวลา'), el('dd', { class: 'mono' }, e.timestamp),
+        el('dt', {}, 'ความเสี่ยง'), el('dd', {}, badge(sevLevel(e.severity), e.severity)),
+        el('dt', {}, 'IP'), el('dd', { class: 'mono' }, e.sourceIp),
+        el('dt', {}, 'Status'), el('dd', { class: 'mono' }, e.statusCode));
+      const line = `${e.method} ${e.path}`;
+      d.querySelector('[data-detail-raw]').textContent = line;
+      const copy = d.querySelector('[data-copy]');
+      copy.textContent = 'คัดลอก path';
+      copy.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(line);
+          copy.textContent = 'คัดลอกแล้ว';
+        } catch {
+          copy.textContent = 'คัดลอกไม่ได้ ให้เลือกข้อความเอง';
+        }
+      };
+      d.querySelector('[data-by-ip]').onclick = () => {
+        d.close();
+        setState({ q: e.sourceIp, severity: '', type: '' });
+      };
+      d.showModal();
+    }
+
+    ui.dialog.addEventListener('click', (ev) => {
+      if (ev.target === ui.dialog) ui.dialog.close();
+    });
+    ui.dialog.querySelector('[data-close]').addEventListener('click', () => ui.dialog.close());
+    ui.severity.addEventListener('click', (ev) => {
+      const b = ev.target.closest('button');
+      if (b) setState({ severity: b.dataset.value });
+    });
+    ui.type.addEventListener('change', () => setState({ type: ui.type.value }));
+    let typing;
+    ui.q.addEventListener('input', () => {
+      clearTimeout(typing);
+      typing = setTimeout(() => setState({ q: ui.q.value.trim() }), 200);
+    });
+    document.querySelector('[data-filters]').addEventListener('submit', (ev) => ev.preventDefault());
+    window.addEventListener('hashchange', () => { syncControls(); update(); });
+
+    syncControls();
+    startPage((d, v) => {
+      events = d.events;
+      view = v;
+      fillTypes();
+      update();
+    });
+  </script>
+</body>
+</html>
